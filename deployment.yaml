@@ -1,0 +1,37 @@
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: kube-kms-example
+  namespace: default
+  labels:
+    app: kube-kms-example
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: kube-kms-example
+      annotations:
+        iam.amazonaws.com/role: arn:aws:iam::{AccountId}:role/k8s/{RoleName}
+    spec:
+      containers:
+      - image: treacher/kube-kms-example:latest
+        name: kube-kms-example
+        envFrom:
+        - configMapRef:
+            name: kube-kms-example
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-kms-example
+  namespace: default
+  labels:
+    app: kube-kms-example
+data:
+  KMS_ENCRYPTED_DB_PASSWORD: "AQICAHj5jPUgYWAnjEXVeSvtg98gusmUcncxTb1pg+/p9W6NOAHd4xDeWtNSGUWMyqOf7h6cAAAAZzBlBgkqhkiG9w0BBwagWDBWAgEAMFEGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM7tDQv7h73zQftY5tAgEQgCTlI1uXcgBrNdvsBoXb2ytkkya+VJRHl2zZWMW5qzheJ2YKeSg="
+  KMS_ENCRYPTED_DB_USER: "AQICAHj5jPUgYWAnjEXVeSvtg98gusmUcncxTb1pg+/p9W6NOAHrz68itBGQ6jgbmK6HgzDRAAAAYTBfBgkqhkiG9w0BBwagUjBQAgEAMEsGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMJj0q65b8KZo4sRY6AgEQgB7cksi/tq9lmyQtBh4uK6HfmyoMHIMm+a72gu4o8Qo="
+  KMS_ENCRYPTED_API_KEY: "AQICAHj5jPUgYWAnjEXVeSvtg98gusmUcncxTb1pg+/p9W6NOAFobUiYON7DRYoe3ZtSC5nNAAAAZzBlBgkqhkiG9w0BBwagWDBWAgEAMFEGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMSsYpPDJvAnRITyNsAgEQgCREj7SdmKYG7gX+JOMJfYG4ILnujd0ZLfXYrJcxrTy4XTCkTzU="
+  KMS_ENCRYPTED_SERVICE_PASSWORD: "AQICAHj5jPUgYWAnjEXVeSvtg98gusmUcncxTb1pg+/p9W6NOAElX/reSqpDqhuY1RgYaQ72AAAAZjBkBgkqhkiG9w0BBwagVzBVAgEAMFAGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMy8al1te4FCu+pdEjAgEQgCNlNfdZamx7R5cHhX6uQSFRCsaIx58lN2bA97wQlhtRAQYPuw=="

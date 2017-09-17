@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  # KMS Key which we'll be using to encrypt our environment variables
+  Key:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: kube-kms-example application secrets key
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: allow-root-access-to-key
+        Statement:
+        - Sid: allow-root-to-delegate-actions
+          Effect: Allow
+          Principal:
+            AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+          Action:
+          - kms:*
+          Resource: '*'
+  # Defining a KMS Alias for our key so we can reference it easily.
+  KeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/kube-kms-example
+      TargetKeyId: !Ref Key
+  # Application role which we'll later get our Pods to assume
+  # so that we can decrypt our environment variables when the
+  # pod boots.
+  KubeApplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        # Allow ec2 instances to assume this role
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+        # Allow the root account the ability to delegate
+        # access to assume this role
+        - Effect: Allow
+          Principal:
+            AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+          Action: sts:AssumeRole
+      # Define an explicit k8s path so that we can limit
+      # the scope of roles that can be assumed by the
+      # Kubernetes cluster (security).
+      Path: /k8s/
+      Policies:
+      - PolicyName: allow-access-to-kms-key
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - kms:Decrypt
+            Resource: !GetAtt Key.Arn
